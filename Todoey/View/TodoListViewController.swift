@@ -25,7 +25,7 @@ class TodoListViewController: UITableViewController {
         
         // gets location of sqlLite db
         // print(FileManager.default.urls(for: .documentDirectory, in: .userDomainMask))
-        print("entering view did load")
+        
         loadItems()
     }
     
@@ -102,13 +102,37 @@ class TodoListViewController: UITableViewController {
         self.tableView.reloadData()
     }
     
-    func loadItems() {
-        let request : NSFetchRequest<Item> = Item.fetchRequest()
+    /*
+        "with" : external param
+        "request" : internal param
+        "= Item.fetchRequest" = default value
+    */
+    func loadItems(with request: NSFetchRequest<Item> = Item.fetchRequest()) {
+        
         do {
             itemArray = try context.fetch(request)
         } catch {
             print("Error fetching data from context \(error)")
         }
+        
+        tableView.reloadData()
     }
+    
+}
+
+//MARK: - Search bar methods
+
+extension TodoListViewController: UISearchBarDelegate {
+    
+    func searchBarSearchButtonClicked(_ searchBar: UISearchBar) {
+        let request : NSFetchRequest<Item> = Item.fetchRequest()
+        
+        request.predicate = NSPredicate(format: "title CONTAINS[cd] %@", searchBar.text!)
+        
+        request.sortDescriptors = [NSSortDescriptor(key: "title", ascending: true)]
+        
+        loadItems(with: request)
+    }
+
 }
 
