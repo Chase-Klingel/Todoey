@@ -133,6 +133,20 @@ extension TodoListViewController: UISearchBarDelegate {
         
         loadItems(with: request)
     }
+    
+    func searchBar(_ searchBar: UISearchBar, textDidChange searchText: String) {
+        if (searchBar.text?.count == 0) {
+            loadItems()
+            
+            // DispatchQueue : object that manages the execution of work items
+            DispatchQueue.main.async {
+                // ask search bar to remove cursor / remove keyboard
+                searchBar.resignFirstResponder()
+            }
+        }
+    }
 
 }
+
+
 
