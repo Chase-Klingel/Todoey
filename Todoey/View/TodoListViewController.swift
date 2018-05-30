@@ -25,18 +25,20 @@ class TodoListViewController: UITableViewController {
         
         // gets location of sqlLite db
         // print(FileManager.default.urls(for: .documentDirectory, in: .userDomainMask))
+        print("entering view did load")
         loadItems()
     }
     
     //MARK - Tableview Datasouce methods
     override func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
+        print(itemArray.count)
         return itemArray.count
     }
     
     override func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
         let cell = tableView.dequeueReusableCell(withIdentifier: "ToDoItemCell", for: indexPath)
         let item = itemArray[indexPath.row]
-        
+
         cell.textLabel?.text = item.title
         cell.accessoryType = (item.done == true) ? .checkmark : .none
         
@@ -46,7 +48,12 @@ class TodoListViewController: UITableViewController {
     //MARK - TableView Delegate Methods
     
     override func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
-        itemArray[indexPath.row].done = !itemArray[indexPath.row].done
+        
+        context.delete(itemArray[indexPath.row])
+        itemArray.remove(at: indexPath.row)
+
+        //itemArray[indexPath.row].done = !itemArray[indexPath.row].done
+        
         saveItems()
         
         tableView.reloadData()
