@@ -15,7 +15,7 @@ class TodoListViewController: UITableViewController {
     
     var selectedCategory : Category? {
         didSet {
-            loadItems(initialLoad: true)
+            loadItems()
         }
     }
     
@@ -110,14 +110,15 @@ class TodoListViewController: UITableViewController {
         "request" : internal param
         "= Item.fetchRequest" = default value
     */
-    func loadItems(with request: NSFetchRequest<Item> = Item.fetchRequest(), initialLoad: Bool) {
-        if (initialLoad) {
-            let predicate = NSPredicate(format: "parentCategory.name == %@", selectedCategory!.name!)
-            request.predicate = predicate
+    func loadItems(with request: NSFetchRequest<Item> = Item.fetchRequest(), predicate: NSPredicate? = nil) {
+        let categoryPredicate = NSPredicate(format: "parentCategory.name MATCHES %@", selectedCategory!.name!)
+        
+        if let additionalPredicate = predicate {
+            request.predicate = NSCompoundPredicate(andPredicateWithSubpredicates: [categoryPredicate, additionalPredicate])
+        } else {
+            request.predicate = categoryPredicate
         }
-        
-        print("request \(request)")
-        
+    
         do {
             itemArray = try context.fetch(request)
         } catch {
@@ -136,20 +137,16 @@ extension TodoListViewController: UISearchBarDelegate {
     func searchBarSearchButtonClicked(_ searchBar: UISearchBar) {
         let request : NSFetchRequest<Item> = Item.fetchRequest()
         
-        request.predicate = NSPredicate(format: "title CONTAINS[cd] %@ AND parentCategory == %@", searchBar.text!, selectedCategory!)
+        let predicate = NSPredicate(format: "title CONTAINS[cd] %@", searchBar.text!)
         
         request.sortDescriptors = [NSSortDescriptor(key: "title", ascending: true)]
         
-        loadItems(with: request, initialLoad: false)
+        loadItems(with: request, predicate: predicate)
     }
     
     func searchBar(_ searchBar: UISearchBar, textDidChange searchText: String) {
         if (searchBar.text?.count == 0) {
-            let request : NSFetchRequest<Item> = Item.fetchRequest()
-            request.predicate = NSPredicate(format: "parentCategory == %@", selectedCategory!)
-            request.sortDescriptors = [NSSortDescriptor(key: "title", ascending: true)]
-            
-            loadItems(with: request, initialLoad: false)
+            loadItems()
             
             // DispatchQueue : object that manages the execution of work items
             DispatchQueue.main.async {
