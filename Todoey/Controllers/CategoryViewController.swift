@@ -19,6 +19,8 @@ class CategoryViewController: UITableViewController {
         loadCategories()
     }
     
+    //MARK - TableView Data Source Methods
+    
     override func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
         return categories.count
     }
@@ -33,10 +35,26 @@ class CategoryViewController: UITableViewController {
         return cell
     }
     
-    override func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
-        // TODO
+    //MARK - Load And Save Data
+    func loadCategories() {
+        let request: NSFetchRequest<Category> = Category.fetchRequest()
+        
+        do {
+            categories = try context.fetch(request)
+        } catch {
+            print("Error while fetching category records: \(error)")
+        }
     }
-
+    
+    func saveCategory() {
+        do {
+            try context.save()
+        } catch {
+            print("save category error: \(error)")
+        }
+    }
+    
+    //MARK - Add New Categories
     @IBAction func addButtonPressed(_ sender: UIBarButtonItem) {
         print("here")
         var textField = UITextField()
@@ -61,23 +79,5 @@ class CategoryViewController: UITableViewController {
         
         alert.addAction(action)
         present(alert, animated: true, completion: nil)
-    }
-    
-    func loadCategories() {
-        let request: NSFetchRequest<Category> = Category.fetchRequest()
-        
-        do {
-            categories = try context.fetch(request)
-        } catch {
-            print("Error while fetching category records: \(error)")
-        }
-    }
-    
-    func saveCategory() {
-        do {
-            try context.save()
-        } catch {
-            print("save category error: \(error)")
-        }
     }
 }
