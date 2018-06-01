@@ -31,7 +31,6 @@ class TodoListViewController: UITableViewController {
     
     //MARK - Tableview Datasouce methods
     override func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
-        print(itemArray.count)
         return itemArray.count
     }
     
