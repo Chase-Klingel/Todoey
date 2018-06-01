@@ -13,20 +13,24 @@ class TodoListViewController: UITableViewController {
     
     var itemArray = [Item]()
     
+    var selectedCategory : Category? {
+        didSet {
+            loadItems(initialLoad: true)
+        }
+    }
+    
     /* 1. tapping into UIApplication class
-     2. getting the shared singleton object which corresponds to the current application as an OBJECT
-     3. tapping into the current apps delegate (of type optional UIApplicationDelegate)
-     4. casting the current apps delegate into our class AppDelegate -- perfectly fine b/c AppDelegate is a subclass of UIApplicationDelegate
-     */
+       2. getting the shared singleton object which corresponds to the current application as an OBJECT
+       3. tapping into the current apps delegate (of type optional UIApplicationDelegate)
+       4. casting the current apps delegate into our class AppDelegate -- perfectly fine b/c AppDelegate is a subclass of UIApplicationDelegate
+    */
     let context = (UIApplication.shared.delegate as! AppDelegate).persistentContainer.viewContext
 
     override func viewDidLoad() {
         super.viewDidLoad()
         
         // gets location of sqlLite db
-        // print(FileManager.default.urls(for: .documentDirectory, in: .userDomainMask))
-        
-        loadItems()
+        print(FileManager.default.urls(for: .documentDirectory, in: .userDomainMask))
     }
     
     //MARK - Tableview Datasouce methods
@@ -73,10 +77,10 @@ class TodoListViewController: UITableViewController {
                 let newItem = Item(context: self.context)
                 newItem.title = textField.text!
                 newItem.done = false
+                newItem.parentCategory = self.selectedCategory
+                
                 self.itemArray.append(newItem)
-                
                 self.saveItems()
-                
                 self.tableView.reloadData()
             }
         }
@@ -106,7 +110,13 @@ class TodoListViewController: UITableViewController {
         "request" : internal param
         "= Item.fetchRequest" = default value
     */
-    func loadItems(with request: NSFetchRequest<Item> = Item.fetchRequest()) {
+    func loadItems(with request: NSFetchRequest<Item> = Item.fetchRequest(), initialLoad: Bool) {
+        if (initialLoad) {
+            let predicate = NSPredicate(format: "parentCategory.name == %@", selectedCategory!.name!)
+            request.predicate = predicate
+        }
+        
+        print("request \(request)")
         
         do {
             itemArray = try context.fetch(request)
@@ -126,16 +136,20 @@ extension TodoListViewController: UISearchBarDelegate {
     func searchBarSearchButtonClicked(_ searchBar: UISearchBar) {
         let request : NSFetchRequest<Item> = Item.fetchRequest()
         
-        request.predicate = NSPredicate(format: "title CONTAINS[cd] %@", searchBar.text!)
+        request.predicate = NSPredicate(format: "title CONTAINS[cd] %@ AND parentCategory == %@", searchBar.text!, selectedCategory!)
         
         request.sortDescriptors = [NSSortDescriptor(key: "title", ascending: true)]
         
-        loadItems(with: request)
+        loadItems(with: request, initialLoad: false)
     }
     
     func searchBar(_ searchBar: UISearchBar, textDidChange searchText: String) {
         if (searchBar.text?.count == 0) {
-            loadItems()
+            let request : NSFetchRequest<Item> = Item.fetchRequest()
+            request.predicate = NSPredicate(format: "parentCategory == %@", selectedCategory!)
+            request.sortDescriptors = [NSSortDescriptor(key: "title", ascending: true)]
+            
+            loadItems(with: request, initialLoad: false)
             
             // DispatchQueue : object that manages the execution of work items
             DispatchQueue.main.async {
