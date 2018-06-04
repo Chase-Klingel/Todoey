@@ -48,6 +48,7 @@ class CategoryViewController: UITableViewController {
     }
     
     //MARK - Load And Save Data
+    
     func loadCategories() {
         categories = realm.objects(Category.self)
     }
@@ -63,6 +64,7 @@ class CategoryViewController: UITableViewController {
     }
     
     //MARK - Add New Categories
+    
     @IBAction func addButtonPressed(_ sender: UIBarButtonItem) {
         print("here")
         var textField = UITextField()
