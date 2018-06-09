@@ -15,7 +15,7 @@ class TodoListViewController: UITableViewController {
     var todoItems: Results<Item>?
     let realm = try! Realm()
     
-    var selectedCategory   : Category? {
+    var selectedCategory: Category? {
         didSet {
            loadItems()
         }
