@@ -112,15 +112,20 @@ extension CategoryViewController: SwipeTableViewCellDelegate {
                     }
                 }
             } catch {
-                print("error trying to delete category \(error)")
+                print("error trying to delete category: \(error)")
             }
-            
-            self.tableView.reloadData()
         }
         
         // customize the action appearance
         deleteAction.image = UIImage(named: "delete-icon")
         
         return [deleteAction]
+    }
+    
+    func tableView(_ tableView: UITableView, editActionsOptionsForRowAt indexPath: IndexPath, for orientation: SwipeActionsOrientation) -> SwipeTableOptions {
+        var options = SwipeTableOptions()
+        options.expansionStyle = .destructive
+        options.transitionStyle = .border
+        return options
     }
 }
