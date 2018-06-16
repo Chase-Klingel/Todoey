@@ -8,22 +8,32 @@
 
 import UIKit
 import RealmSwift
+import ChameleonFramework
 
 @UIApplicationMain
 class AppDelegate: UIResponder, UIApplicationDelegate {
 
     var window: UIWindow?
 
-
     func application(_ application: UIApplication, didFinishLaunchingWithOptions launchOptions: [UIApplicationLaunchOptionsKey: Any]?) -> Bool {
-        
-        //print(Realm.Configuration.defaultConfiguration.fileURL)
+        // print(Realm.Configuration.defaultConfiguration.fileURL)
 
-        do {
-            _ = try Realm()
-        } catch {
-            print("Error initialising new realm: \(error)")
-        }
+        let config = Realm.Configuration(
+            schemaVersion: 2,
+            migrationBlock: { migration, oldSchemaVersion in
+                print(oldSchemaVersion)
+                if (oldSchemaVersion < 2) {
+                    // The enumerateObjects(ofType:_:) method iterates
+                    // over every Person object stored in the Realm file
+                    migration.enumerateObjects(ofType: Category.className()) { oldObject, newObject in
+                        newObject!["backgroundColor"] = UIColor.randomFlat.hexValue()
+                    }
+                }
+        })
+        
+        Realm.Configuration.defaultConfiguration = config
+        
+        let realm = try! Realm()
         
         return true
     }
