@@ -9,7 +9,7 @@
 import UIKit
 import RealmSwift
 
-class TodoListViewController: UITableViewController {
+class TodoListViewController: SwipeViewController {
     
     var todoItems: Results<Item>?
     let realm = try! Realm()
@@ -24,17 +24,18 @@ class TodoListViewController: UITableViewController {
         super.viewDidLoad()
         
         // gets location of sqlLite db
-        print(FileManager.default.urls(for: .documentDirectory, in: .userDomainMask))
+        // print(FileManager.default.urls(for: .documentDirectory, in: .userDomainMask))
     }
     
-    //MARK - Tableview Datasouce methods
+    //MARK: - Tableview Datasouce methods
     
     override func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
         return todoItems?.count ?? 1
     }
     
     override func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
-        let cell = tableView.dequeueReusableCell(withIdentifier: "ToDoItemCell", for: indexPath)
+        let cell = super.tableView(tableView, cellForRowAt: indexPath)
+        
         if let item = todoItems?[indexPath.row] {
             cell.textLabel?.text = item.title
             cell.accessoryType = (item.done == true) ? .checkmark : .none
@@ -45,7 +46,7 @@ class TodoListViewController: UITableViewController {
         return cell
     }
     
-    //MARK - TableView Delegate Methods
+    //MARK: - TableView Delegate Methods
     
     override func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
         
@@ -64,7 +65,7 @@ class TodoListViewController: UITableViewController {
         tableView.deselectRow(at: indexPath, animated: true)
     }
     
-    //MARK - Add New Items
+    //MARK: - Add New Items
     
     @IBAction func addButtonPressed(_ sender: UIBarButtonItem) {
         var textField = UITextField()
@@ -74,21 +75,7 @@ class TodoListViewController: UITableViewController {
         let action = UIAlertAction(title: "Add Item", style: .default) { (action) in
             
             if (textField.text! != "") {
-                
-                if let currentCategory = self.selectedCategory {
-                    do {
-                        try self.realm.write {
-                            let newItem = Item()
-                            newItem.title = textField.text!
-                            newItem.dateCreated = Date()
-                            currentCategory.items.append(newItem)
-                        }
-                    } catch {
-                        print("save item error: \(error)")
-                    }
-                    
-                    self.tableView.reloadData()
-                }
+                self.saveItem(item: textField.text!)
             }
         }
         
@@ -103,10 +90,38 @@ class TodoListViewController: UITableViewController {
     }
     
     func loadItems() {
-        todoItems = selectedCategory?.items.sorted(byKeyPath: "title", ascending: true)
+        todoItems = selectedCategory?.items.sorted(byKeyPath: "title", ascending: false)
         tableView.reloadData()
     }
     
+    func saveItem(item: String) {
+        if let currentCategory = self.selectedCategory {
+            do {
+                try self.realm.write {
+                    let newItem = Item()
+                    newItem.title = item
+                    newItem.dateCreated = Date()
+                    currentCategory.items.append(newItem)
+                }
+            } catch {
+                print("save item error: \(error)")
+            }
+            
+            self.tableView.reloadData()
+        }
+    }
+    
+    override func deleteRecord(at indexPath: IndexPath) {
+        do {
+            try realm.write {
+                if let itemForDeletion = todoItems?[indexPath.row] {
+                    realm.delete(itemForDeletion)
+                }
+            }
+        } catch {
+            print("delete item error: \(error)")
+        }
+    }
 }
 
 //MARK: - Search bar methods
